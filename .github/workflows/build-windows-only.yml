@@ -1,33 +1,24 @@
 name: Build Excel Windows Only
 
-
 on:
   workflow_dispatch:
 
-
 permissions:
   contents: read
-
 
 
 jobs:
 
   build-windows:
 
-
     name: Build Windows x64 Excel Extension
-
 
     runs-on: windows-2022
 
 
-
     defaults:
-
       run:
-
         shell: bash
-
 
 
     env:
@@ -38,16 +29,19 @@ jobs:
 
       EXTENSION_NAME: excel
 
+      # 强制使用 GitHub runner 自带 vcpkg
+      VCPKG_ROOT: C:/vcpkg
+
+      # 强制 CMake 使用 vcpkg toolchain
+      CMAKE_TOOLCHAIN_FILE: C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 
     steps:
 
 
-
-      # --------------------------------
-      # Checkout source
-      # --------------------------------
-
+      # -----------------------------
+      # checkout
+      # -----------------------------
       - name: Checkout duckdb-excel
 
         uses: actions/checkout@v4
@@ -60,12 +54,9 @@ jobs:
 
 
 
-
-
-      # --------------------------------
-      # Fix DuckDB version
-      # --------------------------------
-
+      # -----------------------------
+      # DuckDB version
+      # -----------------------------
       - name: Checkout exact DuckDB v1.5.4 source
 
         run: |
@@ -80,18 +71,10 @@ jobs:
           git -C duckdb log -1 --oneline
 
 
-          echo "DuckDB version:"
 
-          git -C duckdb describe --tags --exact-match
-
-
-
-
-
-      # --------------------------------
+      # -----------------------------
       # MSVC
-      # --------------------------------
-
+      # -----------------------------
       - name: Setup MSVC
 
         uses: ilammy/msvc-dev-cmd@v1
@@ -102,12 +85,9 @@ jobs:
 
 
 
-
-
-      # --------------------------------
+      # -----------------------------
       # Ninja
-      # --------------------------------
-
+      # -----------------------------
       - name: Install Ninja
 
         shell: pwsh
@@ -118,60 +98,66 @@ jobs:
 
 
 
-
-
-      # --------------------------------
+      # -----------------------------
       # vcpkg
-      # --------------------------------
-
+      # -----------------------------
       - name: Install vcpkg dependencies
 
         shell: pwsh
 
         run: |
 
-          Write-Host "Install vcpkg manifest dependencies"
+
+          Write-Host "Using vcpkg:"
+
+          vcpkg version
 
 
-          vcpkg install --triplet x64-windows
+          Write-Host "Installing manifest dependencies"
 
 
-          Write-Host "vcpkg completed"
+          cd $env:GITHUB_WORKSPACE
+
+
+          vcpkg install `
+            --triplet x64-windows
+
+
+          Write-Host "vcpkg finished"
 
 
 
-
-
-      # --------------------------------
+      # -----------------------------
       # Build
-      # --------------------------------
-
+      # -----------------------------
       - name: Build release extension
+
 
         run: |
 
-          make release VCPKG=1
+
+          echo "VCPKG_ROOT=$VCPKG_ROOT"
+
+          echo "CMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE"
+
+
+          make release
 
 
 
-
-
-      # --------------------------------
-      # Collect extension
-      # --------------------------------
-
+      # -----------------------------
+      # Collect files
+      # -----------------------------
       - name: Locate extension
+
 
         shell: pwsh
 
+
         run: |
 
 
-          Write-Host "Searching excel extension"
-
-
-
-          $extension = Get-ChildItem `
+          $ext = Get-ChildItem `
 
             -Path build/release `
 
@@ -179,11 +165,12 @@ jobs:
 
             -Filter excel.duckdb_extension |
 
+
             Select-Object -First 1
 
 
 
-          if (-not $extension) {
+          if (-not $ext) {
 
             Write-Error "excel.duckdb_extension not found"
 
@@ -193,9 +180,9 @@ jobs:
 
 
 
-          Write-Host "Found extension:"
+          Write-Host "Extension found:"
 
-          Write-Host $extension.FullName
+          Write-Host $ext.FullName
 
 
 
@@ -211,10 +198,9 @@ jobs:
 
           Copy-Item `
 
-            $extension.FullName `
+            $ext.FullName `
 
             artifact/excel.duckdb_extension
-
 
 
 
@@ -223,37 +209,31 @@ jobs:
 
             -Path build/release `
 
-            -Filter duckdb.exe |
+            -Filter duckdb.exe `
+
+            -Recurse |
+
 
             Select-Object -First 1
 
 
 
-          if (-not $duckdb) {
+          if ($duckdb) {
 
-            Write-Error "duckdb.exe not found"
+            Copy-Item `
 
-            exit 1
+              $duckdb.FullName `
+
+              artifact/duckdb.exe
 
           }
 
 
 
-          Copy-Item `
-
-            $duckdb.FullName `
-
-            artifact/duckdb.exe
-
-
-
-
-
-      # --------------------------------
+      # -----------------------------
       # Upload
-      # --------------------------------
-
-      - name: Upload Windows artifact
+      # -----------------------------
+      - name: Upload Windows Excel Extension
 
 
         uses: actions/upload-artifact@v4
