@@ -3,33 +3,26 @@ name: Build Windows x64 Excel Extension
 on:
   workflow_dispatch:
 
+
 jobs:
-  build-windows:
+
+  build:
+
     name: Build Windows x64 Excel Extension
+
     runs-on: windows-2022
-
-    env:
-      GEN: ninja
-      DUCKDB_PLATFORM: windows_amd64
-      EXTENSION_NAME: excel
-
-      # 使用 GitHub runner 自带 vcpkg
-      VCPKG_ROOT: C:/vcpkg
-
-      # vcpkg toolchain
-      CMAKE_TOOLCHAIN_FILE: C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 
     steps:
 
-    - name: Checkout duckdb-excel
+    - name: Checkout extension
       uses: actions/checkout@v4
-      with:
-        path: .
 
 
-    - name: Checkout exact DuckDB v1.5.4 source
+    - name: Checkout DuckDB v1.5.4
+
       shell: pwsh
+
       run: |
 
         git clone https://github.com/duckdb/duckdb.git duckdb
@@ -38,17 +31,22 @@ jobs:
 
         git checkout v1.5.4
 
-        cd ..
 
 
     - name: Setup MSVC
+
       uses: ilammy/msvc-dev-cmd@v1
+
       with:
+
         arch: x64
 
 
+
     - name: Install Ninja
+
       shell: pwsh
+
       run: |
 
         choco install ninja -y
@@ -56,83 +54,36 @@ jobs:
         ninja --version
 
 
+
     #
-    # 关键修复
+    # Build directly
     #
-    - name: Install vcpkg dependencies
-      shell: pwsh
+    - name: Build extension
+
+      shell: bash
+
       run: |
 
 
-        Write-Host "Current directory:"
-        pwd
+        export GEN=ninja
+
+        export DUCKDB_PLATFORM=windows_amd64
+
+        export EXTENSION_NAME=excel
 
 
-        Write-Host "Check vcpkg.json"
+        echo "Building DuckDB extension"
 
-        Get-Content .\vcpkg.json
-
-
-        Write-Host "Bootstrap vcpkg"
-
-        cd C:\vcpkg
-
-        .\bootstrap-vcpkg.bat
-
-
-        Write-Host "Install manifest dependencies"
-
-
-        cd $env:GITHUB_WORKSPACE
-
-
-        vcpkg install `
-          --triplet x64-windows `
-          --x-manifest-root=$env:GITHUB_WORKSPACE
+        make release
 
 
 
-    - name: Verify expat installed
+    - name: Show result
+
       shell: pwsh
+
       run: |
-
-
-        Write-Host "Checking expat"
-
 
         Get-ChildItem `
-          C:\vcpkg\installed\x64-windows `
           -Recurse `
-          -Filter "*expat*"
-
-
-
-    - name: Build release extension
-      shell: bash
-      env:
-        VCPKG_ROOT: C:/vcpkg
-        CMAKE_TOOLCHAIN_FILE: C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-
-      run: |
-
-
-        echo "VCPKG_ROOT=$VCPKG_ROOT"
-
-        echo "CMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE"
-
-
-        make release VCPKG=1
-
-
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-
-        name: duckdb-excel-windows-x64
-
-        path: |
-
-          build/release/**/*.duckdb_extension
-
-          build/release/**/*.zip
+          -Include "*.duckdb_extension","*.zip"
