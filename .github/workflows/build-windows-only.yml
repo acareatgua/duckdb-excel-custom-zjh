@@ -79,7 +79,7 @@ jobs:
 
       run: |
 
-        C:\vcpkg\vcpkg.exe install --triplet x64-windows
+        C:\vcpkg\vcpkg.exe install --triplet x64-windows-static
 
 
 
@@ -116,7 +116,7 @@ jobs:
 
         export VCPKG_TOOLCHAIN_PATH=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-        export VCPKG_DEFAULT_TRIPLET=x64-windows
+        export VCPKG_DEFAULT_TRIPLET=x64-windows-static
 
         echo "Building DuckDB Excel extension"
 
