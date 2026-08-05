@@ -25,6 +25,13 @@ jobs:
         fetch-depth: 0
 
 
+    - name: Prepare extension-ci-tools
+      shell: pwsh
+      run: |
+
+        git submodule update --init extension-ci-tools
+
+
 
     - name: Prepare DuckDB source
       shell: pwsh
@@ -34,6 +41,7 @@ jobs:
 
         cd duckdb
 
+        git checkout v1.5.4
         git submodule update --init --recursive
 
         cd ..
@@ -110,7 +118,11 @@ jobs:
 
         ninja --version
 
+    - name: Clean build directory
+      shell: pwsh
+      run: |
 
+        Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
 
     - name: Build Excel extension
 
