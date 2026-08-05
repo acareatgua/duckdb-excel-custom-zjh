@@ -23,7 +23,9 @@ jobs:
 
 
     defaults:
+
       run:
+
         shell: bash
 
 
@@ -42,9 +44,9 @@ jobs:
 
 
 
-      # ---------------------------------
+      # --------------------------------
       # Checkout source
-      # ---------------------------------
+      # --------------------------------
 
       - name: Checkout duckdb-excel
 
@@ -60,9 +62,9 @@ jobs:
 
 
 
-      # ---------------------------------
+      # --------------------------------
       # Fix DuckDB version
-      # ---------------------------------
+      # --------------------------------
 
       - name: Checkout exact DuckDB v1.5.4 source
 
@@ -78,7 +80,7 @@ jobs:
           git -C duckdb log -1 --oneline
 
 
-          echo "DuckDB tag:"
+          echo "DuckDB version:"
 
           git -C duckdb describe --tags --exact-match
 
@@ -86,9 +88,9 @@ jobs:
 
 
 
-      # ---------------------------------
+      # --------------------------------
       # MSVC
-      # ---------------------------------
+      # --------------------------------
 
       - name: Setup MSVC
 
@@ -102,9 +104,9 @@ jobs:
 
 
 
-      # ---------------------------------
+      # --------------------------------
       # Ninja
-      # ---------------------------------
+      # --------------------------------
 
       - name: Install Ninja
 
@@ -118,9 +120,9 @@ jobs:
 
 
 
-      # ---------------------------------
-      # vcpkg manifest dependencies
-      # ---------------------------------
+      # --------------------------------
+      # vcpkg
+      # --------------------------------
 
       - name: Install vcpkg dependencies
 
@@ -128,34 +130,35 @@ jobs:
 
         run: |
 
-          Write-Host "Install manifest dependencies"
-
-          vcpkg install
+          Write-Host "Install vcpkg manifest dependencies"
 
 
-          Write-Host "vcpkg finished"
+          vcpkg install --triplet x64-windows
+
+
+          Write-Host "vcpkg completed"
 
 
 
 
 
-      # ---------------------------------
-      # Build extension
-      # ---------------------------------
+      # --------------------------------
+      # Build
+      # --------------------------------
 
       - name: Build release extension
 
         run: |
 
-          make release
+          make release VCPKG=1
 
 
 
 
 
-      # ---------------------------------
-      # Collect result
-      # ---------------------------------
+      # --------------------------------
+      # Collect extension
+      # --------------------------------
 
       - name: Locate extension
 
@@ -164,7 +167,8 @@ jobs:
         run: |
 
 
-          Write-Host "Searching extension..."
+          Write-Host "Searching excel extension"
+
 
 
           $extension = Get-ChildItem `
@@ -189,10 +193,9 @@ jobs:
 
 
 
-          Write-Host "Found:"
+          Write-Host "Found extension:"
 
           Write-Host $extension.FullName
-
 
 
 
@@ -246,12 +249,11 @@ jobs:
 
 
 
-
-      # ---------------------------------
+      # --------------------------------
       # Upload
-      # ---------------------------------
+      # --------------------------------
 
-      - name: Upload Windows build
+      - name: Upload Windows artifact
 
 
         uses: actions/upload-artifact@v4
