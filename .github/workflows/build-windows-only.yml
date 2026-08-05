@@ -28,6 +28,18 @@ jobs:
 
 
     - name: Prepare DuckDB source
+      shell: pwsh
+      run: |
+
+        git clone --branch v1.5.4 https://github.com/duckdb/duckdb.git duckdb
+
+        cd duckdb
+
+        git submodule update --init --recursive
+
+        cd ..
+
+
     - name: Verify DuckDB checkout
       shell: pwsh
       run: |
@@ -42,18 +54,9 @@ jobs:
 
         git status
 
-      shell: pwsh
-
-      run: |
-
-        git clone --branch v1.5.4  https://github.com/duckdb/duckdb.git duckdb
-
-
-        cd duckdb
-
-        git submodule update --init --recursive
-
         cd ..
+
+
 
 
 
