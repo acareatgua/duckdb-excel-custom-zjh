@@ -117,6 +117,8 @@ jobs:
         export VCPKG_TOOLCHAIN_PATH=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
         export VCPKG_DEFAULT_TRIPLET=x64-windows-static
+        export VCPKG_TARGET_TRIPLET=x64-windows-static
+
 
         echo "Building DuckDB Excel extension"
 
