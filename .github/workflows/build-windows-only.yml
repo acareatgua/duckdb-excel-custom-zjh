@@ -114,7 +114,7 @@ jobs:
 
         export VCPKG_ROOT=C:/vcpkg
 
-        export VCPKG=1
+        export VCPKG_TOOLCHAIN_PATH=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
         export VCPKG_DEFAULT_TRIPLET=x64-windows
 
