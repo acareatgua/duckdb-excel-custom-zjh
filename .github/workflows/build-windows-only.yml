@@ -79,7 +79,7 @@ jobs:
 
       run: |
 
-        C:\vcpkg\vcpkg.exe install
+        C:\vcpkg\vcpkg.exe install --triplet x64-windows
 
 
 
