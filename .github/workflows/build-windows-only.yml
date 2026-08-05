@@ -28,12 +28,26 @@ jobs:
 
 
     - name: Prepare DuckDB source
+    - name: Verify DuckDB checkout
+      shell: pwsh
+      run: |
+
+        cd duckdb
+
+        Write-Host "DuckDB HEAD:"
+        git rev-parse HEAD
+
+        Write-Host "DuckDB TAG:"
+        git describe --tags --always
+
+        git status
 
       shell: pwsh
 
       run: |
 
-        git clone --branch v1.5.4 --depth 50 https://github.com/duckdb/duckdb.git duckdb
+        git clone --branch v1.5.4  https://github.com/duckdb/duckdb.git duckdb
+
 
         cd duckdb
 
