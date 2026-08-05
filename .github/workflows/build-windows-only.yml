@@ -1,5 +1,6 @@
 name: Build Excel Windows Only
 
+
 on:
   workflow_dispatch:
 
@@ -8,13 +9,17 @@ permissions:
   contents: read
 
 
+
 jobs:
 
   build-windows:
 
+
     name: Build Windows x64 Excel Extension
 
+
     runs-on: windows-2022
+
 
 
     defaults:
@@ -22,169 +27,243 @@ jobs:
         shell: bash
 
 
+
     env:
+
       GEN: ninja
+
       DUCKDB_PLATFORM: windows_amd64
+
       EXTENSION_NAME: excel
+
 
 
     steps:
 
 
-      # -----------------------------
+
+      # ---------------------------------
       # Checkout source
-      # -----------------------------
+      # ---------------------------------
+
       - name: Checkout duckdb-excel
+
         uses: actions/checkout@v4
+
         with:
+
           submodules: recursive
+
           fetch-depth: 1
 
 
 
-      # -----------------------------
-      # Force DuckDB version
-      # -----------------------------
+
+
+      # ---------------------------------
+      # Fix DuckDB version
+      # ---------------------------------
+
       - name: Checkout exact DuckDB v1.5.4 source
+
         run: |
+
           git -C duckdb fetch --force --tags origin
 
           git -C duckdb checkout --force v1.5.4
 
 
-          echo "DuckDB source commit:"
+          echo "DuckDB commit:"
+
           git -C duckdb log -1 --oneline
 
 
-          echo "DuckDB exact tag:"
+          echo "DuckDB tag:"
+
           git -C duckdb describe --tags --exact-match
 
 
 
-      # -----------------------------
-      # Setup MSVC
-      # -----------------------------
+
+
+      # ---------------------------------
+      # MSVC
+      # ---------------------------------
+
       - name: Setup MSVC
+
         uses: ilammy/msvc-dev-cmd@v1
+
         with:
+
           arch: x64
 
 
 
-      # -----------------------------
-      # Install Ninja
-      # -----------------------------
+
+
+      # ---------------------------------
+      # Ninja
+      # ---------------------------------
+
       - name: Install Ninja
+
         shell: pwsh
+
         run: |
+
           choco install ninja --yes --no-progress
 
 
 
-      # -----------------------------
-      # Setup vcpkg
-      # -----------------------------
-      - name: Setup vcpkg dependencies
+
+
+      # ---------------------------------
+      # vcpkg manifest dependencies
+      # ---------------------------------
+
+      - name: Install vcpkg dependencies
+
         shell: pwsh
+
         run: |
 
-          Write-Host "Install expat"
+          Write-Host "Install manifest dependencies"
 
-          vcpkg install expat:x64-windows
-
-
-          Write-Host "vcpkg completed"
+          vcpkg install
 
 
+          Write-Host "vcpkg finished"
 
-      # -----------------------------
-      # Build
-      # -----------------------------
+
+
+
+
+      # ---------------------------------
+      # Build extension
+      # ---------------------------------
+
       - name: Build release extension
+
         run: |
+
           make release
 
-        env:
-          VCPKG_ROOT: C:/vcpkg
 
 
 
-      # -----------------------------
-      # Collect artifacts
-      # -----------------------------
+
+      # ---------------------------------
+      # Collect result
+      # ---------------------------------
+
       - name: Locate extension
+
         shell: pwsh
+
         run: |
+
+
+          Write-Host "Searching extension..."
 
 
           $extension = Get-ChildItem `
+
             -Path build/release `
+
             -Recurse `
+
             -Filter excel.duckdb_extension |
+
             Select-Object -First 1
+
 
 
           if (-not $extension) {
 
-            Write-Error `
-            "excel.duckdb_extension was not generated"
+            Write-Error "excel.duckdb_extension not found"
 
             exit 1
+
           }
 
 
-          Write-Host "Extension:"
+
+          Write-Host "Found:"
+
           Write-Host $extension.FullName
 
 
 
+
           New-Item `
+
             -ItemType Directory `
+
             -Force `
+
             artifact | Out-Null
 
 
 
           Copy-Item `
+
             $extension.FullName `
+
             artifact/excel.duckdb_extension
 
 
 
 
+
           $duckdb = Get-ChildItem `
+
             -Path build/release `
+
             -Filter duckdb.exe |
+
             Select-Object -First 1
 
 
 
           if (-not $duckdb) {
 
-            Write-Error `
-            "duckdb.exe was not generated"
+            Write-Error "duckdb.exe not found"
 
             exit 1
+
           }
 
 
 
           Copy-Item `
+
             $duckdb.FullName `
+
             artifact/duckdb.exe
 
 
 
-      # -----------------------------
+
+
+
+      # ---------------------------------
       # Upload
-      # -----------------------------
+      # ---------------------------------
+
       - name: Upload Windows build
+
+
         uses: actions/upload-artifact@v4
+
 
         with:
 
+
           name: excel-windows-amd64-duckdb-v1.5.4
 
+
           path: artifact/
+
 
           if-no-files-found: error
