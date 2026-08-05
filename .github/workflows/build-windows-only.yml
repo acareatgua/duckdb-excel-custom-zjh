@@ -114,7 +114,7 @@ jobs:
 
         export VCPKG_ROOT=C:/vcpkg
 
-        export ENABLE_VCPKG=1
+        export VCPKG=1
 
         export VCPKG_DEFAULT_TRIPLET=x64-windows
 
