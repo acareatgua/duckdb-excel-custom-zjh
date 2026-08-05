@@ -102,7 +102,7 @@ jobs:
       env:
 
         VCPKG_ROOT: C:/vcpkg
-        CMAKE_TOOLCHAIN_FILE: C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
 
       run: |
 
@@ -112,6 +112,11 @@ jobs:
 
         export EXTENSION_NAME=excel
 
+        export VCPKG_ROOT=C:/vcpkg
+
+        export ENABLE_VCPKG=1
+
+        export VCPKG_DEFAULT_TRIPLET=x64-windows
 
         echo "Building DuckDB Excel extension"
 
