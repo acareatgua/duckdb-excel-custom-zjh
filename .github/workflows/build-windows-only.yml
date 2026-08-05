@@ -79,7 +79,7 @@ jobs:
 
       run: |
 
-        C:\vcpkg\vcpkg.exe install expat:x64-windows
+        C:\vcpkg\vcpkg.exe install
 
 
 
