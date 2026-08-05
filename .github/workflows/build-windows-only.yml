@@ -20,6 +20,7 @@ jobs:
     - name: Checkout duckdb-excel
 
       uses: actions/checkout@v4
+
       with:
         submodules: recursive
 
@@ -31,11 +32,9 @@ jobs:
 
       run: |
 
-        git clone https://github.com/duckdb/duckdb.git duckdb
+        git clone --branch v1.5.4 --depth 50 https://github.com/duckdb/duckdb.git duckdb
 
         cd duckdb
-
-        git checkout v1.5.4
 
         git submodule update --init --recursive
 
@@ -50,6 +49,37 @@ jobs:
       with:
 
         arch: x64
+
+
+
+    - name: Setup vcpkg
+
+      shell: pwsh
+
+      run: |
+
+        Write-Host "Checking vcpkg..."
+
+        if (!(Test-Path "C:\vcpkg")) {
+
+          git clone https://github.com/microsoft/vcpkg C:\vcpkg
+
+          C:\vcpkg\bootstrap-vcpkg.bat
+
+        }
+
+
+        C:\vcpkg\vcpkg.exe --version
+
+
+
+    - name: Install Excel dependencies
+
+      shell: pwsh
+
+      run: |
+
+        C:\vcpkg\vcpkg.exe install expat:x64-windows
 
 
 
@@ -68,6 +98,10 @@ jobs:
     - name: Build Excel extension
 
       shell: bash
+
+      env:
+
+        VCPKG_ROOT: C:/vcpkg
 
       run: |
 
@@ -90,7 +124,8 @@ jobs:
 
       run: |
 
-        Write-Host "Searching extension files..."
+        Write-Host "Searching generated extension files..."
+
 
         Get-ChildItem `
           -Recurse `
