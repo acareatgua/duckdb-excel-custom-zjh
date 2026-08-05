@@ -9,6 +9,8 @@ jobs:
 
   build:
 
+    name: Build Excel Extension Windows x64
+
     runs-on: windows-2022
 
 
@@ -18,6 +20,8 @@ jobs:
     - name: Checkout duckdb-excel
 
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
 
 
@@ -29,25 +33,13 @@ jobs:
 
         git clone https://github.com/duckdb/duckdb.git duckdb
 
-
         cd duckdb
-
 
         git checkout v1.5.4
 
+        git submodule update --init --recursive
 
         cd ..
-
-
-
-        # copy build tools
-
-        Copy-Item `
-          -Recurse `
-          -Force `
-          duckdb/extension-ci-tools `
-          ./extension-ci-tools
-
 
 
 
@@ -73,12 +65,11 @@ jobs:
 
 
 
-    - name: Build extension
+    - name: Build Excel extension
 
       shell: bash
 
       run: |
-
 
         export GEN=ninja
 
@@ -87,19 +78,36 @@ jobs:
         export EXTENSION_NAME=excel
 
 
-        echo "start build"
-
+        echo "Building DuckDB Excel extension"
 
         make release
 
 
 
-    - name: Collect artifacts
+    - name: Check generated files
 
       shell: pwsh
 
       run: |
 
+        Write-Host "Searching extension files..."
+
         Get-ChildItem `
           -Recurse `
           -Include "*.duckdb_extension","*.zip"
+
+
+
+    - name: Upload Excel extension artifact
+
+      uses: actions/upload-artifact@v4
+
+      with:
+
+        name: excel-v1.5.4-windows-amd64
+
+        path: |
+
+          **/*.duckdb_extension
+
+          **/*.zip
