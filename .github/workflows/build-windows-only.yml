@@ -1,5 +1,6 @@
 name: Build Windows x64 Excel Extension
 
+
 on:
   workflow_dispatch:
 
@@ -8,18 +9,19 @@ jobs:
 
   build:
 
-    name: Build Windows x64 Excel Extension
-
     runs-on: windows-2022
 
 
     steps:
 
-    - name: Checkout extension
+
+    - name: Checkout duckdb-excel
+
       uses: actions/checkout@v4
 
 
-    - name: Checkout DuckDB v1.5.4
+
+    - name: Prepare DuckDB source
 
       shell: pwsh
 
@@ -27,9 +29,25 @@ jobs:
 
         git clone https://github.com/duckdb/duckdb.git duckdb
 
+
         cd duckdb
 
+
         git checkout v1.5.4
+
+
+        cd ..
+
+
+
+        # copy build tools
+
+        Copy-Item `
+          -Recurse `
+          -Force `
+          duckdb/extension-ci-tools `
+          ./extension-ci-tools
+
 
 
 
@@ -55,9 +73,6 @@ jobs:
 
 
 
-    #
-    # Build directly
-    #
     - name: Build extension
 
       shell: bash
@@ -72,13 +87,14 @@ jobs:
         export EXTENSION_NAME=excel
 
 
-        echo "Building DuckDB extension"
+        echo "start build"
+
 
         make release
 
 
 
-    - name: Show result
+    - name: Collect artifacts
 
       shell: pwsh
 
